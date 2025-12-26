@@ -500,7 +500,16 @@
       const plane = document.getElementById('plane');
       const obstaclesDiv = document.getElementById('obstacles');
       const gameOverDiv = document.getElementById('game-over');
+      const simScene = document.getElementById('flight-sim-scene');
+      function getSceneBounds() {
+        const rect = simScene.getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      }
+      // Dynamically set plane start position to center
       let planeX = 400, planeY = 400;
+      const bounds = getSceneBounds();
+      planeX = Math.max(0, Math.min(bounds.width - 120, bounds.width / 2 - 60));
+      planeY = Math.max(0, Math.min(bounds.height - 120, bounds.height / 2 - 60));
       let planeSpeed = 18;
       let running = true;
       let obstacleInterval, moveInterval;
@@ -520,6 +529,10 @@
       }, 100);
 
       function movePlane() {
+        // Clamp plane within scene
+        const bounds = getSceneBounds();
+        planeX = Math.max(0, Math.min(bounds.width - 120, planeX));
+        planeY = Math.max(0, Math.min(bounds.height - 120, planeY));
         plane.style.left = planeX + 'px';
         plane.style.top = planeY + 'px';
       }
@@ -644,7 +657,6 @@
         });
       }
       // Touchscreen events for direct drag
-      const simScene = document.getElementById('flight-sim-scene');
       if (simScene) {
         simScene.addEventListener('touchstart', function(e) {
           // Ignore if touch is on joystick
@@ -689,8 +701,11 @@
           video.volume = 1.0;
           video.currentTime = 0;
           video.play();
-          // Show WIP overlay after jumpscare video ends
+          // Always exit to WIP overlay after video ends
           video.onended = function() {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            }
             document.getElementById('jumpscare-container').style.display = 'none';
             const wip = document.getElementById('wip-overlay');
             wip.style.display = 'flex';
