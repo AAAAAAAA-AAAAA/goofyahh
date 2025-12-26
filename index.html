@@ -318,16 +318,35 @@
         background-repeat: no-repeat !important;
         box-shadow: 0 4px 24px #000a;
       }
-      #flight-instructions, #wip-overlay, #blackout, #jumpscare-container, #start-overlay, #joystick-container {
-        width: 90vw !important;
-        height: calc(90vw * 2/3) !important;
-        max-width: 90vw;
-        max-height: 90vh;
+      /* Overlays always full viewport and fixed */
+      #flight-instructions, #wip-overlay, #blackout, #jumpscare-container, #start-overlay {
+        position: fixed !important;
+        top: 0; left: 0;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: 100vw;
+        max-height: 100vh;
         border-radius: 0 !important;
         margin: 0 !important;
         display: flex;
         align-items: center;
         justify-content: center;
+        z-index: 10000;
+      }
+      #joystick-container {
+        position: fixed !important;
+        left: 40px !important;
+        bottom: 40px !important;
+        width: 120px !important;
+        height: 120px !important;
+        z-index: 10001 !important;
+      }
+      #flight-timer {
+        position: fixed !important;
+        top: 18px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 10002 !important;
       }
     }
   </style>
