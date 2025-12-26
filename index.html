@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airport Story</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #222;
+    }
+    .scene {
+      position: relative;
+      width: 900px;
+      height: 600px;
+      margin: 40px auto;
+      background: url('airport.png') center/cover no-repeat;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+    .character {
+      position: absolute;
+      bottom: 40px;
+      width: 160px;
+      z-index: 2;
+    }
+    .soldier {
+      left: 180px;
+      animation: jumpy 0.033s steps(2, end) 120;
+      /* 0.033s * 120 = ~4s */
+      animation-fill-mode: forwards;
+    }
+    .flightgirl {
+      left: 340px;
+    }
+    .bubble {
+      position: absolute;
+      min-width: 120px;
+      max-width: 220px;
+      padding: 16px 20px;
+      border-radius: 24px;
+      background: #fff;
+      color: #222;
+      font-size: 1.1em;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      transition: opacity 0.8s;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .bubble.soldier {
+      left: 350px;
+      bottom: 200px;
+    }
+    .bubble.flightgirl {
+      left: 510px;
+      bottom: 80px;
+    }
+    .bubble.visible {
+      opacity: 1;
+    }
+    @keyframes jumpy {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-30px); }
+      100% { transform: translateY(0); }
+    }
+    .soldier.move-out {
+      position: absolute !important;
+      left: 750px;
+      bottom: 40px;
+      z-index: 1000;
+      transition: left 3s linear, opacity 3s linear;
+      opacity: 0;
+    }
+    .scene#cockpit-scene {
+      background: url('cockpit.png') center/cover no-repeat;
+    }
+    .character.pilot {
+      right: 120px;
+      top: 200px;
+      left: unset;
+      bottom: unset;
+      position: absolute;
+      width: 160px;
+      z-index: 2;
+    }
+    .character.soldier-cockpit {
+      left: -180px;
+      top: 120px;
+      position: absolute;
+      width: 160px;
+      z-index: 2;
+      transition: left 1.2s cubic-bezier(0.6,0,0.4,1);
+    }
+    .character.soldier-cockpit.slide-in {
+      left: 320px;
+    }
+    .bubble.soldier-cockpit {
+      left: 500px;
+      top: 120px; /* moved down for better alignment */
+      bottom: unset;
+      position: absolute;
+      z-index: 3;
+      display: none;
+    }
+    .bubble.pilot-cockpit {
+      left: 600px; /* moved left for better visibility */
+      top: 110px;
+      position: absolute;
+      z-index: 3;
+      display: none;
+      min-width: 180px;
+      max-width: 260px;
+      text-align: center;
+    }
+    .bubble-text {
+      display: block;
+      margin-top: 8px;
+    }
+    .bubble-arrow {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+    .bubble-arrow.left {
+      left: -18px;
+      top: 32px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 18px solid #fff;
+      filter: drop-shadow(-2px 2px 2px rgba(0,0,0,0.08));
+    }
+    .bubble-arrow.right {
+      right: -18px;
+      top: 32px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 18px solid #fff;
+      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.08));
+      position: absolute;
+    }
+    .bubble-arrow.down {
+      left: 50%;
+      top: 100%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 16px solid #fff;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.08));
+      position: absolute;
+    }
+    .character.pilot.move-crazy {
+      animation: pilot-crazy-move 0.8s linear forwards;
+    }
+    @keyframes pilot-crazy-move {
+      0% { left: unset; right: 120px; top: 200px; }
+      10% { left: 100px; top: 50px; right: unset; }
+      20% { left: 700px; top: 400px; right: unset; }
+      30% { left: 400px; top: 100px; right: unset; }
+      40% { left: 200px; top: 500px; right: unset; }
+      50% { left: 600px; top: 300px; right: unset; }
+      60% { left: 300px; top: 200px; right: unset; }
+      70% { left: 800px; top: 100px; right: unset; }
+      80% { left: 100px; top: 400px; right: unset; }
+      90% { left: 700px; top: 500px; right: unset; }
+      100% { left: 450px; top: 300px; right: unset; opacity: 0; }
+    }
+    .character.soldier-cockpit.move-to-pilot {
+      left: unset !important;
+      right: 120px !important;
+      top: 200px !important;
+      transition: left 1s cubic-bezier(0.6,0,0.4,1), right 1s cubic-bezier(0.6,0,0.4,1), top 1s cubic-bezier(0.6,0,0.4,1);
+    }
+    .scene#flight-sim-scene {
+      display: none;
+      background: url('sky.png') center/cover no-repeat;
+    }
+    #plane {
+      position: absolute;
+      left: 400px;
+      top: 400px;
+      width: 120px;
+      z-index: 2;
+      display: block;
+      transition: left 0.08s linear, top 0.08s linear;
+    }
+    #obstacles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+    .obstacle {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      pointer-events: auto;
+    }
+    #game-over {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      color: #fff;
+      font-size: 2.5rem;
+      background: rgba(0,0,0,0.7);
+      padding: 2rem 3rem;
+      border-radius: 1.5rem;
+      z-index: 10;
+    }
+    #blackout {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 99999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #fff;
+      font-size: 4rem;
+    }
+    #jumpscare-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 100000;
+      align-items: center;
+      justify-content: center;
+    }
+    #jumpscare-video {
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+    #joystick-container {
+      display: none;
+      position: fixed;
+      bottom: 40px;
+      left: 40px;
+      z-index: 10001;
+      width: 120px;
+      height: 120px;
+    }
+    #joystick-bg {
+      width: 120px;
+      height: 120px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 50%;
+      position: absolute;
+    }
+    #joystick {
+      width: 60px;
+      height: 60px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      left: 30px;
+      top: 30px;
+      box-shadow: 0 2px 8px #0003;
+    }
+  </style>
+</head>
+<body>
+  <audio id="bg-music" src="music.mp3" loop></audio>
+  <div id="start-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="color:#fff;font-size:2.2rem;margin-bottom:2rem;text-align:center;">do not press the button</div>
+    <button id="start-btn" style="font-size:2rem;padding:1em 2em;border-radius:1em;border:none;cursor:pointer;background:#d00;color:#fff;box-shadow:0 2px 12px #000;">DO NOT PRESS</button>
+  </div>
+  <div class="scene" id="airport-scene" style="display:none;">
+    <img src="soldier.png" class="character soldier" alt="Soldier">
+    <img src="flightgirl.png" class="character flightgirl" alt="Flight Girl">
+    <div class="bubble soldier" id="bubble-soldier">
+      <span class="bubble-text">haiiii</span>
+      <span class="bubble-arrow left"></span>
+    </div>
+    <div class="bubble flightgirl" id="bubble-girl">
+      <span class="bubble-text">thankjyouforyourservice please don hijack</span>
+      <span class="bubble-arrow right"></span>
+    </div>
+  </div>
+  <div class="scene" id="cockpit-scene" style="display:none;">
+    <img src="pilot.png" class="character pilot" alt="Pilot">
+    <img src="soldier.png" class="character soldier-cockpit" alt="Soldier" style="display:none;">
+    <div class="bubble soldier-cockpit" id="bubble-soldier-cockpit-1" style="display:none;">
+      <span class="bubble-text">i hi jack u plane</span>
+      <span class="bubble-arrow left"></span>
+    </div>
+    <div class="bubble soldier-cockpit" id="bubble-soldier-cockpit-2" style="display:none;">
+      <span class="bubble-text">WAIT ARE YOU DIDY</span>
+      <span class="bubble-arrow left"></span>
+    </div>
+    <div class="bubble pilot-cockpit" id="bubble-pilot-cockpit" style="display:none;">
+      <span class="bubble-text">i escape jail plz don snitch</span>
+      <span class="bubble-arrow down"></span>
+    </div>
+    <div class="bubble pilot-cockpit" id="bubble-pilot-cockpit-2" style="display:none;">
+      <span class="bubble-text">i give plane</span>
+      <span class="bubble-arrow down"></span>
+    </div>
+    <div class="bubble pilot-cockpit" id="bubble-pilot-cockpit-3" style="display:none;">
+      <span class="bubble-text">i give you plane if u no snitch</span>
+      <span class="bubble-arrow down"></span>
+    </div>
+  </div>
+  <div class="scene" id="flight-sim-scene" style="display:none; background:url('sky.png') center/cover no-repeat;">
+    <img src="plane.png" id="plane" style="position:absolute; left:400px; top:400px; width:120px; z-index:2; display:block;">
+    <div id="obstacles"></div>
+    <div id="game-over" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:2.5rem; background:rgba(0,0,0,0.7); padding:2rem 3rem; border-radius:1.5rem; z-index:10;">GAME OVER</div>
+    <div id="blackout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:99999; align-items:center; justify-content:center; flex-direction:column; color:#fff; font-size:4rem;">
+      <div id="countdown"></div>
+    </div>
+    <div id="jumpscare-container" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:100000; align-items:center; justify-content:center;">
+      <video id="jumpscare-video" src="jumpscarenugget.mp4" style="max-width:100vw; max-height:100vh;" autoplay></video>
+    </div>
+    <div id="flight-timer" style="display:none; position:absolute; top:18px; left:50%; transform:translateX(-50%); color:#fff; font-size:2.1rem; background:rgba(0,0,0,0.45); padding:0.4em 1.2em; border-radius:1em; z-index:20; font-family:monospace; letter-spacing:0.05em;">0.0s</div>
+  </div>
+  <div id="flight-instructions" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.92); z-index:10000; align-items:center; justify-content:center; flex-direction:column; color:#fff; font-size:2.2rem;">
+    <div style="text-align:center;">
+      avoid the chicken nuggets<br><br>
+      control with arrow keys on PC / use joystick on mobile
+    </div>
+    <button id="flight-start-btn" style="margin-top:2.5rem; font-size:2rem; padding:1em 2em; border-radius:1em; border:none; cursor:pointer; background:#d00; color:#fff; box-shadow:0 2px 12px #000;">START</button>
+  </div>
+  <div id="joystick-container" style="display:none; position:fixed; bottom:40px; left:40px; z-index:10001; width:120px; height:120px;">
+    <div id="joystick-bg" style="width:120px; height:120px; background:rgba(255,255,255,0.12); border-radius:50%; position:absolute;"></div>
+    <div id="joystick" style="width:60px; height:60px; background:#fff; border-radius:50%; position:absolute; left:30px; top:30px; box-shadow:0 2px 8px #0003;"></div>
+  </div>
+  <div id="wip-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fff; z-index:100001; color:#111; font-size:2.5rem; font-family:sans-serif; align-items:center; justify-content:center; flex-direction:column;">
+    <div style="text-align:center;">
+      work in progress 💀<br><br>
+      credits: stxrphxenix and a twink 🔥<br><br>
+      ok bye
+    </div>
+  </div>
+  <script>
+    document.getElementById('start-btn').onclick = function() {
+      var audio = document.getElementById('bg-music');
+      audio.play();
+      document.getElementById('start-overlay').style.display = 'none';
+      document.getElementById('airport-scene').style.display = '';
+      // Start the game timers
+      setTimeout(() => {
+        document.getElementById('bubble-soldier').classList.add('visible');
+        setTimeout(() => {
+          document.getElementById('bubble-girl').classList.add('visible');
+        }, 1200);
+      }, 600);
+      setTimeout(() => {
+        document.querySelector('.character.soldier').classList.add('move-out');
+        setTimeout(() => {
+          document.getElementById('airport-scene').style.display = 'none';
+          document.getElementById('cockpit-scene').style.display = '';
+          const soldierCockpit = document.querySelector('.character.soldier-cockpit');
+          soldierCockpit.style.display = '';
+          setTimeout(() => {
+            soldierCockpit.classList.add('slide-in');
+            setTimeout(() => {
+              const bubble1 = document.getElementById('bubble-soldier-cockpit-1');
+              bubble1.classList.add('visible');
+              bubble1.style.display = 'block';
+              setTimeout(() => {
+                bubble1.classList.remove('visible');
+                bubble1.classList.add('fade');
+                setTimeout(() => {
+                  bubble1.style.display = 'none';
+                  const bubble2 = document.getElementById('bubble-soldier-cockpit-2');
+                  bubble2.classList.add('visible');
+                  bubble2.style.display = 'block';
+                  setTimeout(() => {
+                    bubble2.classList.remove('visible');
+                    bubble2.classList.add('fade');
+                    setTimeout(() => {
+                      bubble2.style.display = 'none';
+                      const bubblePilot = document.getElementById('bubble-pilot-cockpit');
+                      bubblePilot.classList.add('visible');
+                      bubblePilot.style.display = 'block';
+                      setTimeout(() => {
+                        bubblePilot.classList.remove('visible');
+                        bubblePilot.classList.add('fade');
+                        setTimeout(() => {
+                          bubblePilot.style.display = 'none';
+                          // Show 'i give plane'
+                          const bubblePilot2 = document.getElementById('bubble-pilot-cockpit-2');
+                          bubblePilot2.classList.add('visible');
+                          bubblePilot2.style.display = 'block';
+                          setTimeout(() => {
+                            bubblePilot2.classList.remove('visible');
+                            bubblePilot2.classList.add('fade');
+                            setTimeout(() => {
+                              bubblePilot2.style.display = 'none';
+                              // Show 'i give you plane if u no snitch'
+                              const bubblePilot3 = document.getElementById('bubble-pilot-cockpit-3');
+                              bubblePilot3.classList.add('visible');
+                              bubblePilot3.style.display = 'block';
+                              setTimeout(() => {
+                                bubblePilot3.classList.remove('visible');
+                                bubblePilot3.classList.add('fade');
+                                setTimeout(() => {
+                                  bubblePilot3.style.display = 'none';
+                                  // Trigger pilot crazy move and fade out
+                                  const pilotImg = document.querySelector('.character.pilot');
+                                  pilotImg.classList.add('move-crazy');
+                                  setTimeout(() => {
+                                    pilotImg.style.display = 'none';
+                                    // Move soldier to pilot's place
+                                    const soldierCockpit = document.querySelector('.character.soldier-cockpit');
+                                    soldierCockpit.classList.add('move-to-pilot');
+                                    setTimeout(() => {
+                                      document.getElementById('cockpit-scene').style.display = 'none';
+                                      // Show instructions overlay
+                                      document.getElementById('flight-instructions').style.display = 'flex';
+                                    }, 1200);
+                                  }, 800);
+                                }, 800);
+                              }, 2200);
+                            }, 800);
+                          }, 2200);
+                        }, 800);
+                      }, 3000);
+                    }, 800);
+                  }, 3000);
+                }, 3000);
+              }, 800);
+            }, 100);
+          }, 3200);
+        }, 4600);
+      }, 6000);
+    };
+
+    document.getElementById('flight-start-btn').onclick = function() {
+      document.getElementById('flight-instructions').style.display = 'none';
+      document.getElementById('flight-sim-scene').style.display = 'block';
+      document.getElementById('flight-timer').style.display = 'block';
+      // Show joystick on mobile
+      if (/Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)) {
+        document.getElementById('joystick-container').style.display = 'block';
+      }
+      startFlightSim();
+    };
+
+    function startFlightSim() {
+      const plane = document.getElementById('plane');
+      const obstaclesDiv = document.getElementById('obstacles');
+      const gameOverDiv = document.getElementById('game-over');
+      let planeX = 400, planeY = 400;
+      let planeSpeed = 18;
+      let running = true;
+      let obstacleInterval, moveInterval;
+      let obstacles = [];
+      let keys = {};
+      let joystickActive = false, joystickStart = {x:0, y:0}, joystickDir = {x:0, y:0};
+      let touchActive = false, touchTarget = {x:0, y:0};
+      const joystick = document.getElementById('joystick');
+      const joystickBg = document.getElementById('joystick-bg');
+      let timer = 0, timerInterval;
+      const timerDiv = document.getElementById('flight-timer');
+      timerDiv.textContent = '0.0s';
+      timer = 0;
+      timerInterval = setInterval(() => {
+        timer += 0.1;
+        timerDiv.textContent = timer.toFixed(1) + 's';
+      }, 100);
+
+      function movePlane() {
+        plane.style.left = planeX + 'px';
+        plane.style.top = planeY + 'px';
+      }
+
+      function checkCollision(rect1, rect2) {
+        return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
+      }
+
+      function spawnObstacle() {
+        const nugget = document.createElement('img');
+        nugget.src = 'nugget.png';
+        nugget.className = 'obstacle';
+        nugget.style.position = 'absolute';
+        nugget.style.width = '100px';
+        nugget.style.height = '100px';
+        // Allow spawn from 0px to 800px (900px scene width - 100px nugget width)
+        nugget.style.left = (Math.random() * 800) + 'px';
+        nugget.style.top = '-110px';
+        obstaclesDiv.appendChild(nugget);
+        obstacles.push(nugget);
+      }
+
+      function moveObstacles() {
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+          const obs = obstacles[i];
+          // Increase falling speed (was +7)
+          obs.style.top = (parseInt(obs.style.top) + 14) + 'px';
+          if (parseInt(obs.style.top) > 650) {
+            obs.remove();
+            obstacles.splice(i, 1);
+          } else {
+            // Collision check
+            const planeRect = plane.getBoundingClientRect();
+            const obsRect = obs.getBoundingClientRect();
+            if (checkCollision(planeRect, obsRect)) {
+              running = false;
+              clearInterval(obstacleInterval);
+              cancelAnimationFrame(moveInterval);
+              clearInterval(timerInterval);
+              document.removeEventListener('keydown', onKeyDown);
+              document.removeEventListener('keyup', onKeyUp);
+              // Show blackout and countdown
+              showBlackoutAndJumpscare();
+            }
+          }
+        }
+      }
+
+      function update() {
+        if (!running) return;
+        // Keyboard
+        if (keys['ArrowLeft']) planeX = Math.max(0, planeX - planeSpeed);
+        if (keys['ArrowRight']) planeX = Math.min(780, planeX + planeSpeed);
+        if (keys['ArrowUp']) planeY = Math.max(0, planeY - planeSpeed);
+        if (keys['ArrowDown']) planeY = Math.min(480, planeY + planeSpeed);
+        // Joystick (mobile)
+        if (joystickActive) {
+          if (joystickDir.x < -0.2) planeX = Math.max(0, planeX - planeSpeed);
+          if (joystickDir.x > 0.2) planeX = Math.min(780, planeX + planeSpeed);
+          if (joystickDir.y < -0.2) planeY = Math.max(0, planeY - planeSpeed);
+          if (joystickDir.y > 0.2) planeY = Math.min(480, planeY + planeSpeed);
+        }
+        // Touchscreen direct drag
+        if (touchActive) {
+          // Move plane towards touchTarget
+          let dx = touchTarget.x - (planeX + 60);
+          let dy = touchTarget.y - (planeY + 60);
+          let dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist > 10) {
+            planeX += dx / dist * planeSpeed;
+            planeY += dy / dist * planeSpeed;
+            planeX = Math.max(0, Math.min(780, planeX));
+            planeY = Math.max(0, Math.min(480, planeY));
+          }
+        }
+        movePlane();
+        moveObstacles();
+        moveInterval = requestAnimationFrame(update);
+      }
+
+      function onKeyDown(e) {
+        keys[e.key] = true;
+      }
+      function onKeyUp(e) {
+        keys[e.key] = false;
+      }
+
+      document.addEventListener('keydown', onKeyDown);
+      document.addEventListener('keyup', onKeyUp);
+      movePlane();
+      obstacleInterval = setInterval(spawnObstacle, 1200); // faster nuggets
+      moveInterval = requestAnimationFrame(update);
+
+      // Joystick events
+      if (joystick) {
+        joystick.addEventListener('touchstart', function(e) {
+          joystickActive = true;
+          const touch = e.touches[0];
+          joystickStart = {x: touch.clientX, y: touch.clientY};
+        });
+        joystick.addEventListener('touchmove', function(e) {
+          if (!joystickActive) return;
+          const touch = e.touches[0];
+          let dx = touch.clientX - joystickStart.x;
+          let dy = touch.clientY - joystickStart.y;
+          // Clamp to 40px radius
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist > 40) {
+            dx = dx * 40 / dist;
+            dy = dy * 40 / dist;
+          }
+          joystick.style.left = (30 + dx) + 'px';
+          joystick.style.top = (30 + dy) + 'px';
+          joystickDir = {x: dx/40, y: dy/40};
+          e.preventDefault();
+        }, {passive:false});
+        joystick.addEventListener('touchend', function(e) {
+          joystickActive = false;
+          joystick.style.left = '30px';
+          joystick.style.top = '30px';
+          joystickDir = {x:0, y:0};
+        });
+      }
+      // Touchscreen events for direct drag
+      const simScene = document.getElementById('flight-sim-scene');
+      if (simScene) {
+        simScene.addEventListener('touchstart', function(e) {
+          // Ignore if touch is on joystick
+          if (e.target.id === 'joystick' || e.target.id === 'joystick-bg') return;
+          touchActive = true;
+          const rect = simScene.getBoundingClientRect();
+          const touch = e.touches[0];
+          touchTarget = {x: touch.clientX - rect.left, y: touch.clientY - rect.top};
+        });
+        simScene.addEventListener('touchmove', function(e) {
+          if (!touchActive) return;
+          if (e.target.id === 'joystick' || e.target.id === 'joystick-bg') return;
+          const rect = simScene.getBoundingClientRect();
+          const touch = e.touches[0];
+          touchTarget = {x: touch.clientX - rect.left, y: touch.clientY - rect.top};
+          e.preventDefault();
+        }, {passive:false});
+        simScene.addEventListener('touchend', function(e) {
+          touchActive = false;
+        });
+      }
+    }
+
+    function showBlackoutAndJumpscare() {
+      const blackout = document.getElementById('blackout');
+      const countdownDiv = document.getElementById('countdown');
+      const jumpscare = document.getElementById('jumpscare-container');
+      const bgMusic = document.getElementById('bg-music');
+      blackout.style.display = 'flex';
+      let count = 3;
+      countdownDiv.textContent = count;
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownDiv.textContent = count;
+        } else {
+          clearInterval(interval);
+          blackout.style.display = 'none';
+          jumpscare.style.display = 'flex';
+          const video = document.getElementById('jumpscare-video');
+          bgMusic.muted = true;
+          video.volume = 1.0;
+          video.currentTime = 0;
+          video.play();
+          // Show WIP overlay after jumpscare video ends
+          video.onended = function() {
+            document.getElementById('jumpscare-container').style.display = 'none';
+            const wip = document.getElementById('wip-overlay');
+            wip.style.display = 'flex';
+          };
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
