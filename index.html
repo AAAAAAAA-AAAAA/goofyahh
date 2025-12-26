@@ -108,13 +108,14 @@
       display: none;
     }
     .bubble.pilot-cockpit {
-      left: 600px; /* moved left for better visibility */
-      top: 110px;
+      left: 50%;
+      top: 40px;
+      transform: translateX(-50%);
       position: absolute;
       z-index: 3;
       display: none;
       min-width: 180px;
-      max-width: 260px;
+      max-width: 320px;
       text-align: center;
     }
     .bubble-text {
@@ -466,6 +467,7 @@
                       const bubblePilot = document.getElementById('bubble-pilot-cockpit');
                       bubblePilot.classList.add('visible');
                       bubblePilot.style.display = 'block';
+                      positionPilotBubble('bubble-pilot-cockpit');
                       setTimeout(() => {
                         bubblePilot.classList.remove('visible');
                         bubblePilot.classList.add('fade');
@@ -475,6 +477,7 @@
                           const bubblePilot2 = document.getElementById('bubble-pilot-cockpit-2');
                           bubblePilot2.classList.add('visible');
                           bubblePilot2.style.display = 'block';
+                          positionPilotBubble('bubble-pilot-cockpit-2');
                           setTimeout(() => {
                             bubblePilot2.classList.remove('visible');
                             bubblePilot2.classList.add('fade');
@@ -484,6 +487,7 @@
                               const bubblePilot3 = document.getElementById('bubble-pilot-cockpit-3');
                               bubblePilot3.classList.add('visible');
                               bubblePilot3.style.display = 'block';
+                              positionPilotBubble('bubble-pilot-cockpit-3');
                               setTimeout(() => {
                                 bubblePilot3.classList.remove('visible');
                                 bubblePilot3.classList.add('fade');
@@ -712,6 +716,21 @@
           touchActive = false;
         });
       }
+    }
+
+    function positionPilotBubble(bubbleId) {
+      const pilot = document.querySelector('.character.pilot');
+      const bubble = document.getElementById(bubbleId);
+      if (!pilot || !bubble) return;
+      const pilotRect = pilot.getBoundingClientRect();
+      const sceneRect = pilot.parentElement.getBoundingClientRect();
+      // Center bubble horizontally above pilot, 10px above head
+      const bubbleWidth = bubble.offsetWidth || 220;
+      const left = pilotRect.left - sceneRect.left + pilotRect.width/2 - bubbleWidth/2;
+      const top = pilotRect.top - sceneRect.top - bubble.offsetHeight - 10;
+      bubble.style.left = left + 'px';
+      bubble.style.top = top + 'px';
+      bubble.style.transform = 'none';
     }
 
     function showBlackoutAndJumpscare() {
